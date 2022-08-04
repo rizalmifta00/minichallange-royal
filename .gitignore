@@ -1,11 +1,13 @@
 # These are some examples of commonly ignored file patterns.
 # You should customize this list as applicable to your project.
 # Learn more about .gitignore:
-#     https://www.atlassian.com/git/tutorials/saving-changes/gitignore
+# https://www.atlassian.com/git/tutorials/saving-changes/gitignore
+.base
+.history
+yarn.lock
 
 # Node artifact files
 node_modules/
-dist/
 
 # Compiled Java class files
 *.class
@@ -21,7 +23,6 @@ dist/
 
 # Maven
 target/
-dist/
 
 # JetBrains IDE
 .idea/
@@ -48,3 +49,25 @@ Thumbs.db
 *.mov
 *.wmv
 
+app/web/build
+app/mobile/www/index.html
+app/web/src/base/base.history-lock
+app/web/types/layout.ts
+app/web/types/page.ts
+app/web/caches/page.db
+sessions.db
+app/web/src/base/base.history-lock
+
+/build
+/pkgs/**/build
+/pkgs/**/build/*
+**/*-lock
+uploads
+app/web/public/upload
+symlink.sh
+app/mobile/www
+.output/*
+.output
+.nova
+.pnpm-lock.yaml
+app/dbs/package.json

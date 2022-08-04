@@ -1,0 +1,52 @@
+#!/usr/bin/env node
+
+const fs = require('fs')
+const { join } = require('path')
+const { spawn } = require('child_process')
+
+const start = () => {
+  spawn(
+    /^win/.test(process.platform) ? 'pnpm.cmd' : 'pnpm',
+    ['jiti', './pkgs/boot/dev/cli.ts', ...process.argv.slice(2)],
+    {
+      stdio: 'inherit',
+    }
+  )
+}
+
+if (!fs.existsSync(join(process.cwd(), 'app', 'dbs'))) {
+  fs.mkdirSync(join(process.cwd(), 'app', 'dbs'), {
+    recursive: true,
+  })
+}
+
+if (!fs.existsSync(join(process.cwd(), 'app', 'dbs', 'package.json'))) {
+  fs.writeFileSync(
+    join(process.cwd(), 'app', 'dbs', 'package.json'),
+    JSON.stringify(
+      {
+        name: 'dbs',
+        version: '1.0.0',
+        private: true,
+        main: './dbs.ts',
+        dependencies: {},
+      },
+      null,
+      2
+    )
+  )
+}
+
+if (!fs.existsSync('node_modules')) {
+  const pnpm = spawn(
+    /^win/.test(process.platform) ? 'pnpm.cmd' : 'pnpm',
+    ['i'],
+    { stdio: 'inherit' }
+  )
+
+  pnpm.on('exit', function (code) {
+    start()
+  })
+} else {
+  start()
+}

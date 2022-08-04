@@ -1,0 +1,27 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/node_modules": true,
+        "pnpm-lock.yaml": true,
+        ".prettierrc": true,
+        "pnpm-workspace.yaml": true,
+        ".vscode": true,
+        ".husky": true,
+        "app/web/postcss.config.js": true,
+        ".npmrc": true
+    },
+    "hide-files.files": [
+        "pnpm-lock.yaml",
+        ".prettierrc",
+        "pnpm-workspace.yaml",
+        ".vscode",
+        ".husky",
+        "app/web/postcss.config.js",
+        ".npmrc"
+    ]
+}

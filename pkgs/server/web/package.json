@@ -1,0 +1,37 @@
+{
+  "name": "server-web",
+  "version": "1.0.0",
+  "author": "Rizky",
+  "private": true,
+  "main": "./src/index.ts",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "boot": "workspace:^",
+    "consola": "^2.15.3",
+    "fastify": "^3.29.0",
+    "fs-jetpack": "^4.3.1",
+    "h3": "^0.7.8",
+    "http-proxy": "^1.18.1",
+    "lodash.camelcase": "^4.3.0",
+    "lodash.get": "^4.4.2",
+    "lodash.pad": "^4.5.1",
+    "lodash.snakecase": "^4.1.1",
+    "lodash.throttle": "^4.1.1",
+    "lodash.trim": "^4.5.1",
+    "mime-types": "^2.1.35",
+    "server-db": "workspace:^",
+    "server-utility": "workspace:^",
+    "web-init": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/http-proxy": "^1.17.9",
+    "@types/lodash.camelcase": "^4.3.7",
+    "@types/lodash.get": "^4.4.7",
+    "@types/lodash.pad": "^4.5.7",
+    "@types/lodash.snakecase": "^4.1.7",
+    "@types/lodash.throttle": "^4.1.7",
+    "@types/lodash.trim": "^4.5.7",
+    "@types/mime-types": "^2.1.1",
+    "@types/node": "^17.0.36"
+  }
+}

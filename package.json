@@ -1,0 +1,20 @@
+{
+  "name": "boot",
+  "version": "1.0.0",
+  "author": "rizky",
+  "private": true,
+  "license": "MIT",
+  "scripts": {},
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "husky": "^8.0.1",
+    "jiti": "^1.13.0"
+  },
+  "engines": {
+    "node": ">=18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.36",
+    "tslib": "^2.4.0"
+  }
+}

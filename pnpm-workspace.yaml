@@ -1,0 +1,8 @@
+packages:
+  # all packages in subdirs of packages/ and components/
+  - 'app/**'
+  - 'app/dbs/**'
+  - 'pkgs/**'
+  - 'pkgs/client/**'
+  - 'pkgs/server/**'
+  - 'build/pkgs'
