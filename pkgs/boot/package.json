@@ -29,6 +29,7 @@
     "lodash.throttle": "^4.1.1",
     "lodash.trim": "^4.5.1",
     "node-cleanup": "^2.1.2",
+    "node-fetch": "^3.2.10",
     "ololog": "^1.1.175",
     "pidtree": "^0.6.0",
     "prettier": "^2.7.1",

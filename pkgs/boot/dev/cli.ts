@@ -92,6 +92,7 @@ program
     await removeAsync(join(process.cwd(), '.output'))
     await runDev(false, 'prod')
     await viteBuild('prod')
+    await fs.copyFileSync(join(process.cwd(), '.env'), join(process.cwd(), '.output/.env'))
     process.exit(1)
   })
 

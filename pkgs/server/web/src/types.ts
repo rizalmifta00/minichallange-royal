@@ -1,13 +1,12 @@
 import { ParsedConfig } from 'boot/dev/config-parse'
-import { createApp, createRouter } from 'h3'
-import type { IncomingMessage, ServerResponse } from 'http'
 import type { dbs } from 'server-db'
 import { IClusterParent, IServerInit } from '.'
 import type { build } from 'boot'
+import { Request, Response } from 'express'
 
 // @ts-ignore
 import type APIQuery from '../../../../app/server/src/query'
-import { getAppServer } from './app-server'
+import express from 'express'
 
 export type AppServer = {
   ext: Record<string, any>
@@ -18,11 +17,12 @@ export type AppServer = {
     }) => Promise<void>
     root?: {
       init: (root: IClusterParent, config: IServerInit) => Promise<void>
+      kill?: (root: IClusterParent, config: IServerInit) => Promise<void>
     }
     worker?: {
       init: (
-        app: ReturnType<typeof createApp>,
-        router: ReturnType<typeof createRouter>,
+        app: ReturnType<typeof express>,
+        router: ReturnType<typeof express.Router>,
         config: ParsedConfig
       ) => Promise<void>
     }
@@ -39,12 +39,30 @@ export const g = global as typeof global & {
 
 export type APIProps = {
   body: any
-  req: IncomingMessage
-  reply: ServerResponse & { send: (body: any) => void }
+  req: Request
+  reply: Response
   ext: any
   mode: 'dev' | 'prod' | 'pkg'
   baseurl: string
-  session: any
 }
 
 export type API = [string, (args: APIProps) => void | Promise<void>]
+
+export type DBAuth = (args: {
+  db: string
+  table: string
+  action: string
+  params: string
+}) => Promise<boolean> | boolean
+
+export type AuthLogin = (args: {
+  req: Request
+  reply: Response
+  ext: typeof g.app.ext
+}) => { [key: string]: any }
+
+export type AuthLogout = (args: {
+  req: Request
+  reply: Response
+  ext: typeof g.app.ext
+}) => Promise<void>

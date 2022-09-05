@@ -34,14 +34,6 @@ export const clusterQuery = async (
   })
 }
 
-export const parentQuery = async (body: IDBMsg, wk: Worker, cid: string) => {
-  try {
-    const result = await forkQuery(body, cid)
-    wk.send({ action: 'db.result', db: { id: cid, result } })
-  } catch (e) {
-    console.log(e)
-  }
-}
 
 export const forkQuery = (
   body: IDBMsg,
@@ -70,6 +62,7 @@ export const forkQuery = (
               } else {
                 consola.error(e)
               }
+              reject(e)
             }
             return
           }

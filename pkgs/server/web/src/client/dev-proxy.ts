@@ -1,11 +1,11 @@
 import { ParsedConfig } from 'boot/dev/config-parse'
-import type { createApp, createRouter } from 'h3'
+import express from 'express'
 import { createProxy } from 'http-proxy'
 import trim from 'lodash.trim'
 
 export const setupDevProxy = async (
-  app: ReturnType<typeof createApp>,
-  router: ReturnType<typeof createRouter>,
+  app: ReturnType<typeof express>,
+  router: ReturnType<typeof express.Router>,
   config: ParsedConfig,
   url: string,
   port: number,
@@ -13,8 +13,11 @@ export const setupDevProxy = async (
 ) => {
   const surl = config.server.url
   const route = url.substring(config.server.url.length)
+
+  const proxyURL = new URL(url)
+  proxyURL.port = port + ''
   const proxy = createProxy({
-    target: `http://127.0.0.1:${port}`,
+    target: proxyURL.toString().replace('localhost', '127.0.0.1'),
     changeOrigin: true,
     followRedirects: true,
     autoRewrite: true,
@@ -25,7 +28,6 @@ export const setupDevProxy = async (
   proxy.on('proxyRes', (pres, req, res) => {
     if (pres.statusCode) res.statusCode = pres.statusCode
     const type = pres.headers['content-type']?.toLowerCase()
-
     if (
       req.method === 'GET' &&
       (!type || (type && type.indexOf('html') >= 0))
@@ -35,7 +37,6 @@ export const setupDevProxy = async (
       let html = ''
       res.write = function (body: Buffer, ...args: any[]) {
         html += body.toString('utf-8')
-
         return true
       }
       res.end = function () {
@@ -61,9 +62,9 @@ export const setupDevProxy = async (
     }
   })
 
-  router.use(`${route}**`, (req, res, next) => {
+  router.use(`${route}`, (req, res, next) => {
     return new Promise<void>((resolve) => {
-      proxy.web(req, res, {}, () => {
+      proxy.web(req, res, {}, (e) => {
         resolve()
       })
     })

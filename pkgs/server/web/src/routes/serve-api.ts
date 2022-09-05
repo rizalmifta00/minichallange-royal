@@ -1,10 +1,10 @@
 import { ParsedConfig } from 'boot/dev/config-parse'
-import { createApp, createRouter, useBody } from 'h3'
+import express from 'express'
 import { API, g } from '..'
 
 export type IServeApiArgs = {
-  app: ReturnType<typeof createApp>
-  router: ReturnType<typeof createRouter>
+  app: ReturnType<typeof express>
+  router: ReturnType<typeof express.Router>
   mode: 'dev' | 'prod' | 'pkg'
   config: ParsedConfig
   api: Record<string, API>
@@ -14,7 +14,7 @@ let cachedApiArgs = {} as IServeApiArgs
 export const serveApi = async (arg?: Partial<IServeApiArgs>) => {
   if (arg) {
     for (let [k, value] of Object.entries(arg)) {
-      ;(cachedApiArgs as any)[k] = value
+      ; (cachedApiArgs as any)[k] = value
     }
   }
   let { api, app, mode, config, router } = cachedApiArgs
@@ -28,7 +28,7 @@ export const serveApi = async (arg?: Partial<IServeApiArgs>) => {
       let body = undefined
 
       if (req.method === 'POST') {
-        body = await useBody(req)
+        body = req.body
       }
 
       _reply.send = (msg: any) => {
@@ -41,15 +41,18 @@ export const serveApi = async (arg?: Partial<IServeApiArgs>) => {
         reply.end()
       }
 
-      await handler({
-        body,
-        req,
-        reply: _reply,
-        ext: {},
-        mode,
-        baseurl: config.server.url,
-        session: {},
-      })
+      try {
+        await handler({
+          body,
+          req,
+          reply: _reply,
+          ext: g.app.ext,
+          mode,
+          baseurl: config.server.url,
+        })
+      } catch (e) {
+        console.error(e)
+      }
     })
   }
 }

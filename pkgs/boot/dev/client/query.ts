@@ -41,8 +41,9 @@ const generateQueryIndex = async (cwd: string) => {
       await writeAsync(
         i,
         `\
+import { raw } from 'dbs/db'
 export default async (params: any) => {
-  return await db.$queryRaw\`SELECT NOW ()\`
+  return await db.$queryRaw(raw(\`SELECT NOW ()\`))
 }`
       )
     }

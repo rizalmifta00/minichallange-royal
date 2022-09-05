@@ -83,42 +83,57 @@ if (cluster.isWorker) {
       } as IClusterParent
 
       process.on('message', async (data: IServerInit) => {
+        if (data.action === 'kill') {
+          const onKillRoot = get(g.app, 'events.root.kill')
+          if (onKillRoot) {
+            await onKillRoot()
+          }
+          if (process.send) process.send({ event: 'killed' })
+        }
         if (data.action === 'init') {
-          for (let client of Object.values(data.config.client)) {
-            client.url = client.url.replace(
-              `[server.url]`,
-              data.config.server.url
-            )
-          }
-          if (parent.status === 'init') {
-            await serverDb.startDBFork(data.config)
-
-            const forks = (global as any).forks
-            if (Object.keys(forks || {}).length === 0) {
-              console.log(`[  dbs  ] WARNING: No database used`)
+          try {
+            for (let client of Object.values(data.config.client)) {
+              client.url = client.url.replace(
+                `[server.url]`,
+                data.config.server.url
+              )
             }
+
+            parent.config = data.config
+            parent.mode = data.mode
+
+            if (parent.status === 'init') {
+              await startCluster(parent)
+              await serverDb.startDBFork(data.config, data.mode)
+
+              const forks = (global as any).forks
+              if (Object.keys(forks || {}).length === 0) {
+                console.log(`[  dbs  ] WARNING: No database used`)
+              }
+            } else {
+              await startCluster(parent)
+            }
+
+            await getAppServer(data.mode)
+
+            const onInitRoot = get(g.app, 'events.root.init')
+
+            if (onInitRoot) {
+              g.dbs = await serverDb.dbsClient(
+                'fork',
+                Object.keys(data.config.dbs)
+              )
+              g.db = g.dbs['db']
+
+              await onInitRoot(parent, data)
+            }
+
+            parent.status = 'ready'
+            if (process.send)
+              process.send({ event: 'started', url: data.config.server.url })
+          } catch (e) {
+            console.log(`[ worker ] Failed to start worker: ${e}`)
           }
-          parent.config = data.config
-          parent.mode = data.mode
-
-          await startCluster(parent)
-          await getAppServer(data.mode)
-
-          const onInitRoot = get(g.app, 'events.root.init')
-
-          if (onInitRoot) {
-            g.dbs = await serverDb.dbsClient(
-              'fork',
-              Object.keys(data.config.dbs)
-            )
-            g.db = g.dbs['db']
-
-            await onInitRoot(parent, data)
-          }
-
-          parent.status = 'ready'
-          if (process.send)
-            process.send({ event: 'started', url: data.config.server.url })
         }
 
         if (data.action === 'db.query' && data.db && data.db.query) {

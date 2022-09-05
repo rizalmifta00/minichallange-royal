@@ -2,6 +2,7 @@ import { watch } from 'chokidar'
 import { readAsync, writeAsync } from 'fs-jetpack'
 import https from 'https'
 import { join } from 'path'
+import fetch from 'node-fetch'
 
 export const generateVersion = () => {
   const date = new Date()
@@ -19,10 +20,6 @@ export const generateVersion = () => {
 export const watchPkgsAndGenerateVersion = async () => {
   const vpath = join(process.cwd(), 'pkgs', 'version.json')
 
-  const latest = await fetch(
-    `https://raw.githubusercontent.com/rizrmd/royal/master/pkgs/version.json`
-  )
-
   const current = await readAsync(vpath, 'json')
 
   let timeout: ReturnType<typeof setTimeout> = 0 as any
@@ -39,52 +36,40 @@ export const watchPkgsAndGenerateVersion = async () => {
     }
   })
 
+  return `v${current.version}`
+}
+
+export const checkLatestVersion = async () => {
   let msg = ''
+  try {
+    const vpath = join(process.cwd(), 'pkgs', 'version.json')
 
-  if (num(latest) > num(current)) {
-    msg = `
-            ➥ Update available v${current.version} →  v${latest.version}
-              Please update from github.com/rizrmd/royal
+    const _latest = await fetch(
+      `https://raw.githubusercontent.com/rizrmd/royal/master/pkgs/version.json?t=${new Date().getTime()}`
+    )
+    const latest = (await _latest.json()) as any
+    const current = await readAsync(vpath, 'json')
+
+    if (num(latest) > num(current)) {
+      msg = `\
+    ➥  Update available v${current.version} →  v${latest.version}
+       Please update from https://github.com/rizrmd/royal
+       Check: https://github.com/rizrmd/royal/blob/master/pkgs/version.json
 `
+    }
+    if (num(latest) < num(current)) {
+      msg = `\
+    ➥  Your pkgs is updated! (old version at: v${latest.version})
+       Please push your changes to https://github.com/rizrmd/royal
+       Check: https://github.com/rizrmd/royal/blob/master/pkgs/version.json
+`
+    }
+  } catch (e) {
+    console.log('    ➥  Failed to check latest royal version')
   }
-  if (num(latest) < num(current)) {
-    msg = `
-            ➥ Your pkgs is updated! (old version at: v${latest.version})
-              Please push your changes to github.com/rizrmd/royal
-` 
-  }
-
-  return `v${current.version} ${msg}`
+  return msg
 }
 
 const num = (ver: { version: string }) => {
   return parseInt(ver.version.replace(/\./gi, ''))
-}
-
-const fetch = (url: string) => {
-  return new Promise<any>((resolve) => {
-    const _url = new URL(url)
-    const options = {
-      hostname: _url.hostname,
-      port: _url.port,
-      path: _url.pathname,
-      method: 'GET',
-    }
-
-    const req = https.request(options, (res) => {
-      let response = ''
-      res.on('data', (d) => {
-        response += d.toString()
-      })
-      res.on('end', () => {
-        resolve(JSON.parse(response))
-      })
-    })
-
-    req.on('error', (error) => {
-      console.error(error)
-    })
-
-    req.end()
-  })
 }

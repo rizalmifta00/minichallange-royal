@@ -1,21 +1,20 @@
+import { build } from 'esbuild'
 import alias from 'esbuild-plugin-alias'
 import { exists, readAsync, removeAsync, writeAsync } from 'fs-jetpack'
+import get from 'lodash.get'
 import pad from 'lodash.pad'
 import padEnd from 'lodash.padend'
 import { join } from 'path'
 import { error, Forker, logUpdate } from 'server-utility'
+import config from '../../../config'
 import { buildClient } from './build-client'
 import { buildDb } from './build-db'
 import { buildDbs } from './build-dbs'
 import { prepareAppServer } from './build-server'
 import { buildWatch } from './build-watch'
 import { dev } from './client/util'
-import { build } from 'esbuild'
 import { parseConfig, ParsedConfig } from './config-parse'
-
-import config from '../../../config'
-import get from 'lodash.get'
-import { watchPkgsAndGenerateVersion } from './version'
+import { checkLatestVersion, watchPkgsAndGenerateVersion } from './version'
 
 const cwd = process.cwd()
 const formatTs = (ts: number) => {
@@ -45,6 +44,10 @@ export const runDev = (
     const isDebug = get(opt, 'isDebug', false)
 
     const version = await watchPkgsAndGenerateVersion()
+
+    checkLatestVersion().then((e) => {
+      if (e) console.log(e)
+    })
 
     const ival = setInterval(() => {
       if (!isDebug)
@@ -167,7 +170,9 @@ export const runDev = (
     if (isDebug) endLog()
 
     if (isDebug) startLog(`Building Boot`)
+
     // build boot
+    let firstBoot = false
     await buildWatch({
       input: join(cwd, 'pkgs', 'boot', 'src', 'index.ts'),
       output: join(cwd, '.output', 'server.js'),
@@ -186,19 +191,34 @@ export const runDev = (
         clearInterval(ival)
         logUpdate.done()
 
+        if (firstBoot && new Date().getTime() - ts > 10 * 1000) {
+          console.log(`\
+[ royal ] Booting is taking too long.
+          Maybe cleaning ignored files will speed up: git clean -fdx`)
+        }
+        firstBoot = false
+
         if (isDebug) endLog()
 
         if (watch) {
-          const argport = [] as string[]
-          if (opt?.port) {
-            argport.push('--port', opt?.port.toString())
-          }
-          dev.boot = await Forker.run(join(cwd, '.output', 'server.js'), {
-            arg: ['--mode', 'dev', ...process.argv.slice(4), ...argport],
-          })
+          devBoot(opt)
         }
         resolve()
       },
     })
+  })
+}
+
+const devBoot = async (opt?: {
+  isPkg?: true
+  isDebug?: true
+  port?: number
+}) => {
+  const argport = [] as string[]
+  if (opt?.port) {
+    argport.push('--port', opt?.port.toString())
+  }
+  dev.boot = await Forker.run(join(cwd, '.output', 'server.js'), {
+    arg: ['--mode', 'dev', ...process.argv.slice(4), ...argport],
   })
 }

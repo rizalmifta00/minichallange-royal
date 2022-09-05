@@ -1,11 +1,11 @@
 import { BaseClient, ParsedConfig } from 'boot/dev/config-parse'
-import type { createApp, createRouter } from 'h3'
+import express from 'express'
 import { setupDevProxy } from './dev-proxy'
 import { setupProdStatic } from './prod-static'
 
 export const createClient = async (
-  app: ReturnType<typeof createApp>,
-  router: ReturnType<typeof createRouter>,
+  app: ReturnType<typeof express>,
+  router: ReturnType<typeof express.Router>,
   name: string,
   client: BaseClient,
   config: ParsedConfig,

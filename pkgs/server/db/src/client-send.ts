@@ -13,7 +13,7 @@ export const fetchSend: IClientSend = async (params) => {
     method: 'POST',
     headers: {
       Accept: 'application/json',
-      'Content-Type': 'text/plain',
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(params),
   }

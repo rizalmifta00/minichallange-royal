@@ -1,5 +1,4 @@
 import { ParsedConfig } from 'boot/dev/config-parse'
-
 export const define = (name: string, value: any) => {
   const g = global as any
   if (!g[name]) {
@@ -7,7 +6,10 @@ export const define = (name: string, value: any) => {
   }
 }
 
-export const startDBFork = async (config: ParsedConfig) => {
+export const startDBFork = async (
+  config: ParsedConfig,
+  mode: 'dev' | 'prod' | 'pkg'
+) => {
   const { fork } = await import('child_process')
   const { dirname, join } = await import('path')
 
@@ -31,13 +33,23 @@ export const startDBFork = async (config: ParsedConfig) => {
             (data: {
               id: string
               value: any
-              event?: 'ready' | 'error'
+              event?: 'ready' | 'error' | 'killed'
               reason?: string | { meta: { message: string } }
               failedQuery?: any
             }) => {
               if (data.event === 'ready') {
+                console.log(`[  dbs  ] Database ${name} is connected.`)
                 resolveFork()
               } else {
+                if (data.event === 'killed') {
+                  console.log(
+                    `[  dbs  ] ${(typeof data.reason === 'string'
+                      ? data.reason
+                      : '' || ''
+                    ).trim()}`
+                  )
+                  return
+                }
                 if (data.id) {
                   const dqres = dbQueue[data.id]
                   if (dqres) {
@@ -48,7 +60,7 @@ export const startDBFork = async (config: ParsedConfig) => {
                       if (typeof data.reason === 'object' && data.reason.meta) {
                         reject(data.reason.meta.message)
                       } else {
-                        reject('unknown error')
+                        reject(data.reason as string)
                       }
                     } else {
                       resolve(data.value)
@@ -60,10 +72,21 @@ export const startDBFork = async (config: ParsedConfig) => {
           )
           forks[name].stdout?.pipe(process.stdout)
           forks[name].stderr?.pipe(process.stderr)
-          forks[name].once('disconnect', () => {
-            forks[name].ready = false
-            setupFork()
-          })
+
+          const restartDB = (e) => {
+            setTimeout(() => {
+              console.log(
+                `[  dbs  ] Database worker is killed, restarting in 5s`,
+                e
+              )
+              forks[name].ready = false
+              setupFork()
+            }, 5000)
+          }
+          // forks[name].once('close', restartDB)
+          forks[name].once('disconnect', restartDB)
+          // forks[name].once('exit', restartDB)
+          forks[name].once('error', restartDB)
         }
         setupFork()
       })

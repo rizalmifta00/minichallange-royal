@@ -69,7 +69,7 @@ const startServer = async (
       logUpdate(
         `[${formatTs(app.server.timer.ts)}] ${padEnd('Starting Back End', 30)}`
       )
-    }, 100)
+    }, 500)
   }
 
   if (app.server.fork) {
@@ -84,7 +84,7 @@ const startServer = async (
         fork.removeAllListeners()
         fork.on('exit', resolve)
         fork.on('close', resolve)
-        fork.send({ action: 'kill' })
+        if (fork.connected) fork.send({ action: 'kill' })
       }
     })
   }
@@ -98,21 +98,21 @@ const startServer = async (
   })
 
   const restartServer = throttle(
-    () => {
+    async () => {
       if (app.server.fork) {
+        await app.server.kill()
         app.server.fork = null
         console.log('Back End Killed. Restarting...')
         startServer(config, mode)
       }
     },
-    1000,
+    5000,
     { trailing: false }
   )
 
   app.server.fork.once('exit', restartServer)
   app.server.fork.once('close', restartServer)
   app.server.fork.once('disconnect', restartServer)
-  app.server.fork.once('error', restartServer)
   app.server.fork.once('error', restartServer)
   app.server.fork.stdout?.pipe(process.stdout)
   app.server.fork.stderr?.pipe(process.stderr)
@@ -193,4 +193,8 @@ const startServer = async (
   } else {
     await startServer(config, mode)
   }
+
+  // process.on('SIGINT', async () => {
+  //   if (app.server.fork) await app.server.kill()
+  // })
 })()

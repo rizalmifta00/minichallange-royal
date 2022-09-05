@@ -41,6 +41,7 @@ const prodBuildSingleClient = async (
         `
     <script>
       window.baseurl = "${trim(url, '/')}";
+      window.mode = "prod";
       window.serverurl = "${trim(config.server.url, '/')}";
     </script>
   ` +

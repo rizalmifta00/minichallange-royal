@@ -21,5 +21,5 @@
       "react-dom": ["../../../app/web/types/react-dom/next"]
     }
   },
-  "include": ["./src/**/*", "../../../app/web/types/**/*"]
+  "include": ["./src/**/*", "../../../app/web/types/**/*", "../../server/web/src/auth.ts"]
 }

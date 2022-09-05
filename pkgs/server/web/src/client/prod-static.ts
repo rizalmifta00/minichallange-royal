@@ -1,14 +1,14 @@
 import { ParsedConfig } from 'boot/dev/config-parse'
 import { createReadStream } from 'fs'
 import { stat } from 'fs/promises'
-import { createApp, createEvent, createRouter, sendStream } from 'h3'
+import express from 'express'
 import trim from 'lodash.trim'
 import mime from 'mime-types'
 import { join } from 'path'
 
 export const setupProdStatic = async (
-  app: ReturnType<typeof createApp>,
-  router: ReturnType<typeof createRouter>,
+  app: ReturnType<typeof express>,
+  router: ReturnType<typeof express.Router>,
   config: ParsedConfig,
   url: string,
   name: string,
@@ -33,7 +33,6 @@ export const setupProdStatic = async (
         if (st.isDirectory()) {
           path = join(root, 'index.html')
         }
-
       } catch (e) {
         path = join(root, 'index.html')
         res.statusCode = 404
@@ -43,9 +42,6 @@ export const setupProdStatic = async (
     const type = mime.lookup(path)
 
     if (type) res.setHeader('content-type', type)
-
-    const stream = createReadStream(path)
-    await sendStream(createEvent(req, res), stream)
-    res.end()
+    createReadStream(path).pipe(res)
   })
 }

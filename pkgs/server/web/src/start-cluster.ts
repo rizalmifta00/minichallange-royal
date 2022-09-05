@@ -1,7 +1,11 @@
-import cluster from 'cluster'
+import cluster, { Cluster } from 'cluster'
 import os from 'os'
 import { IClusterParent, IServerInit } from '..'
 import * as serverDb from 'server-db'
+import { forkQuery } from 'server-db'
+import { log, waitUntil } from 'server-utility'
+import pad from 'lodash.pad'
+import throttle from 'lodash.throttle'
 const MAX_CLUSTER_PROCESS = os.cpus().length
 
 export const startCluster = (parent: IClusterParent) => {
@@ -38,17 +42,45 @@ export const startCluster = (parent: IClusterParent) => {
         msg.db.query &&
         msg.db.id
       ) {
-        await serverDb.parentQuery(msg.db.query, wk, msg.db.id)
+        try {
+          if (wk.isConnected() && !wk.isDead()) {
+            const result = await forkQuery(msg.db.query, msg.db.id)
+            wk.send({ action: 'db.result', db: { id: msg.db.id, result } })
+          } else {
+            console.log(
+              '[  dbs  ] Sending Query result failed, parent worker is killed',
+              msg.db.query
+            )
+          }
+        } catch (e) {
+          throw e
+        }
       }
     })
 
-    cluster.on('exit', (wk, code, singal) => {
-      if (parent.status !== 'stopping') {
-        cluster.fork({
-          id: Object.keys(parent.child).indexOf(wk.id.toString()) + 1,
-        })
-      }
-      delete parent.child[wk.id]
-    })
+    const restartCluster = throttle(
+      async (wk: typeof cluster.worker, code: any, singal: any) => {
+        if (wk) {
+          log(
+            `[${pad(`wrk-${wk.id}`, 7)}]  🍃 Back End Worker #${
+              wk.id
+            } killed, restarting... (pid:${process.pid})`
+          )
+          if (parent.status !== 'stopping') {
+            await waitUntil(() => wk.isDead())
+            cluster.fork({
+              id: Object.keys(parent.child).indexOf(wk.id.toString()) + 1,
+            })
+          }
+          delete parent.child[wk.id]
+        } else {
+          console.log('[  wrk  ] Worker is killed')
+        }
+      },
+      400
+    )
+    // sementara dimatikan dulu karena bikin ngebug
+    cluster.on('exit', restartCluster)
+    cluster.on('disconnect', restartCluster)
   })
 }

@@ -1,5 +1,8 @@
 import { watch } from 'chokidar'
+import { unzip } from 'fflate'
+import { readFileSync } from 'fs'
 import { dirAsync, exists, writeAsync } from 'fs-jetpack'
+import { writeFile } from 'fs/promises'
 import { join } from 'path'
 import { reloadAPI } from './client/api'
 import { reloadQuery } from './client/query'
@@ -26,6 +29,31 @@ export const prepareAppServer = async (arg: {
     'all',
     reloadAPI.bind({ cwd })
   )
+
+  if (!exists(join(asdir, 'src', 'auth'))) {
+    const zipFile = readFileSync(
+      join(arg.cwd, 'pkgs', 'boot', 'dev', 'client', 'auth.zip')
+    )
+    await new Promise<void>((res) => {
+      unzip(zipFile, {}, async (_: any, content: any) => {
+        const promises: any[] = []
+        for (let [path, file] of Object.entries(content || []) as any) {
+          const cpath = join(asdir, 'src', 'auth', path.substring(5))
+          if (file.length === 0) {
+            await dirAsync(cpath)
+            continue
+          }
+          promises.push(
+            writeFile(cpath, file, {
+              mode: 0o777,
+            })
+          )
+        }
+        await Promise.all(promises)
+        res()
+      })
+    })
+  }
 
   if (!exists(join(asdir, 'node_modules'))) {
     await pnpm(['install'], {
@@ -99,10 +127,8 @@ export default {
       "isolatedModules": true,
       "moduleResolution": "node",
       "noEmit": true,
-      "baseUrl": "./src",
       "typeRoots": ["./types/"]
     },
-    "include": ["./src/**/*", "./types/**/*"]
   }
   `
   )

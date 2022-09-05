@@ -36,7 +36,6 @@ export const useAuth = (arg?: { onReady: () => void | Promise<void> }) => {
       })
 
       const json = await res.json()
-
       setUser(json)
       setLoading(false)
       ref.current.activity = 'idle'
@@ -49,7 +48,6 @@ export const useAuth = (arg?: { onReady: () => void | Promise<void> }) => {
       render()
       const res = await rfetch(`${w.baseurl}/auth/logout`)
       const json = await res.json()
-      console.log(json)
       setUser(json)
       setLoading(false)
       ref.current.activity = 'idle'

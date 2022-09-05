@@ -43,23 +43,7 @@ const dbClient = (name: string, send: IClientSend, args?: IDBClientArg) => {
                 params,
               },
               args
-            )
-          }
-        }
-        if (table === 'definition') {
-          return (table: string) => {
-            console.log('definition', table)
-            return new Promise((resolve) => resolve({}))
-
-            return send(
-              {
-                db: name,
-                action: 'definition',
-                table,
-                params: undefined,
-              },
-              args
-            )
+            ) 
           }
         }
 
