@@ -49,26 +49,26 @@ Thumbs.db
 *.mov
 *.wmv
 
-app/web/build
-app/mobile/www/index.html
-app/web/src/base/base.history-lock
-app/web/types/layout.ts
-app/web/types/page.ts
-app/web/caches/page.db
+# app/web/build
+# app/mobile/www/index.html
+# app/web/src/base/base.history-lock
+# app/web/types/layout.ts
+# app/web/types/page.ts
+# app/web/caches/page.db
 sessions.db
-app/web/src/base/base.history-lock
+# app/web/src/base/base.history-lock
 
 /build
 /pkgs/**/build
 /pkgs/**/build/*
 **/*-lock
 uploads
-app/web/public/upload
+# app/web/public/upload
 symlink.sh
-app/mobile/www
+# app/mobile/www
 .output/*
 .output
 .nova
 .pnpm-lock.yaml
-app/dbs/package.json
-app
+# app/dbs/package.json
+# app

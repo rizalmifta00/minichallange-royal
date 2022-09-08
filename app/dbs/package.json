@@ -1,0 +1,7 @@
+{
+  "name": "dbs",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dbs.ts",
+  "dependencies": {}
+}
